@@ -1,0 +1,125 @@
+You are an expert in robotics locomotion, reinforcement learning, JAX, MuJoCo MJX, and code generation.
+
+We are going to control a Barkour quadruped robot to complete a commanded locomotion task.
+The Barkour robot is a 3D floating-base robot consisting of one torso with four legs. Each leg has three actuated joints: an abduction/adduction joint, a hip flexion/extension joint, and a knee flexion/extension joint. The robot therefore has 12 actuated joints.
+
+The action space of Barkour is Box(-1, 1, (12,), float32). Each action is a normalized joint-position command. The environment converts it to a desired joint position using
+'desired_joint_position = default_joint_position + 0.3 * action', and then applies a PD controller.
+
+The actions are grouped by leg in the following order:
+
+| Num | Action | Joint | Unit |
+| --- | ------ | ----- | ---- |
+| 0 | Normalized desired-position offset for the front-left abduction/adduction joint | hinge | dimensionless |
+| 1 | Normalized desired-position offset for the front-left hip joint | hinge | dimensionless |
+| 2 | Normalized desired-position offset for the front-left knee joint | hinge | dimensionless |
+| 3 | Normalized desired-position offset for the hind-left abduction/adduction joint | hinge | dimensionless |
+| 4 | Normalized desired-position offset for the hind-left hip joint | hinge | dimensionless |
+| 5 | Normalized desired-position offset for the hind-left knee joint | hinge | dimensionless |
+| 6 | Normalized desired-position offset for the front-right abduction/adduction joint | hinge | dimensionless |
+| 7 | Normalized desired-position offset for the front-right hip joint | hinge | dimensionless |
+| 8 | Normalized desired-position offset for the front-right knee joint | hinge | dimensionless |
+| 9 | Normalized desired-position offset for the hind-right abduction/adduction joint | hinge | dimensionless |
+| 10 | Normalized desired-position offset for the hind-right hip joint | hinge | dimensionless |
+| 11 | Normalized desired-position offset for the hind-right knee joint | hinge | dimensionless |
+
+Now I want you to help me write a dense reward function for reinforcement learning.
+I will give you the available attributes of the environment and the Barkour robot. You may use these attributes to write the reward function.
+
+class Text2RewardContext:
+    self.command : jax.Array
+        # shape (3,)
+        # commanded torso-local [forward velocity, lateral velocity, yaw rate]
+        # units [m/s, m/s, rad/s]
+
+    self.base_lin_vel : jax.Array
+        # shape (3,)
+        # current torso-local linear velocity [vx, vy, vz], in m/s
+
+    self.base_ang_vel : jax.Array
+        # shape (3,)
+        # current torso-local angular velocity [wx, wy, wz], in rad/s
+
+    self.projected_gravity : jax.Array
+        # shape (3,)
+        # gravity direction expressed in the torso frame
+        # approximately [0, 0, -1] when the torso is upright
+
+    self.base_height : jax.Array
+        # scalar
+        # torso z-coordinate position in the world frame, in meters
+
+    self.joint_pos_error : jax.Array
+        # shape (12,)
+        # current actuated-joint position minus the default joint position, in radians
+
+    self.joint_vel : jax.Array
+        # shape (12,)
+        # actuated-joint angular velocities, in rad/s
+
+    self.motor_torque : jax.Array
+        # shape (12,)
+        # actuator torques, in N m
+
+    self.action : jax.Array
+        # shape (12,)
+        # current normalized policy action
+
+    self.previous_action : jax.Array
+        # shape (12,)
+        # previous normalized policy action
+
+    self.foot_contact : jax.Array
+        # shape (4,), Boolean
+        # current foot-ground contacts in the order
+        # [front_left, hind_left, front_right, hind_right]
+
+    self.foot_position_world : jax.Array
+        # shape (4, 3)
+        # current foot positions in the world frame, in meters
+        # foot order: [front_left, hind_left, front_right, hind_right]
+
+    self.foot_velocity_world : jax.Array
+        # shape (4, 3)
+        # current foot velocities in the world frame, in m/s
+        # foot order: [front_left, hind_left, front_right, hind_right]
+
+    self.done : jax.Array
+        # scalar Boolean
+        # true when the environment terminates because the robot falls,
+        # reaches a joint limit, or becomes too low
+
+class BarkourEnv:
+    self.dt : float
+        # time between two policy actions, in seconds; default is 0.02 s
+
+The positive torso-local x direction is the forward direction, the positive torso-local y direction is the leftward direction, and positive yaw rate turns counterclockwise when viewed from above.
+
+I want the robot to fulfill the following task:
+
+Track the commanded torso-local forward velocity, lateral velocity, and yaw rate using one unified locomotion policy. For forward commands from 0.0 to 0.7 m/s, the robot should exhibit a stable support-rich walking-trot gait. For commands above 0.7 m/s and up to 1.7 m/s, it should exhibit a diagonal trot gait. For commands above 1.7 m/s, it should exhibit a bound gait. The robot should remain upright and stable and should transition between these speed-dependent gait behaviors when the command changes.
+
+1. Please think step by step and explain what this task means.
+2. Then write one complete Python module that defines a function with exactly this format:
+
+```python
+def compute_dense_reward(
+    ctx: Text2RewardContext,
+) -> jax.Array:
+```
+
+The function must return the scalar dense `reward` only.
+3. Take care of variable types. Never use attributes, methods, functions, or variables that were not given above.
+4. You may add comments to the code to explain your design.
+5. Do not give too much weight to regularization or penalty terms. Give different weights to different reward terms according to their units, scale, and importance.
+6. The generated module must import only:
+
+```python
+from __future__ import annotations
+import jax
+import jax.numpy as jnp
+from reward_context import Text2RewardContext
+```
+
+7. Use only `jax.numpy` operations inside `compute_dense_reward`. The function must be compatible with both `jax.jit` and `jax.vmap`. 
+8. Do not multiply the final reward by `self.dt` or by `0.02`; the environment applies time-step scaling after this function returns.

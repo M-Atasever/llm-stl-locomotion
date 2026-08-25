@@ -1,0 +1,132 @@
+## 1. Step-by-step task interpretation
+
+The robot receives a command:
+
+- `command[0]`: desired torso-local forward velocity, m/s
+- `command[1]`: desired torso-local lateral velocity, m/s
+- `command[2]`: desired torso-local yaw rate, rad/s
+
+The policy should produce 12 normalized joint-position actions so that Barkour locomotes while matching those commanded velocities.
+
+A good dense reward should therefore:
+
+1. **Reward velocity tracking strongly**
+   - Match torso-local forward/lateral velocity: `base_lin_vel[:2] ≈ command[:2]`
+   - Match torso-local yaw rate: `base_ang_vel[2] ≈ command[2]`
+
+2. **Keep the robot stable and upright**
+   - Penalize roll/pitch angular velocity.
+   - Penalize vertical velocity.
+   - Reward projected gravity close to `[0, 0, -1]`, meaning the torso is upright.
+
+3. **Encourage physically reasonable locomotion**
+   - Penalize excessive joint velocities.
+   - Penalize excessive motor torques.
+   - Penalize large action changes for smoother control.
+   - Penalize foot slipping while in contact with the ground.
+
+4. **Discourage failure**
+   - Apply a penalty if `ctx.done` is true.
+
+The main reward terms are tracking terms. Regularization terms are intentionally kept smaller so they improve motion quality without preventing the robot from following commands.
+
+```python
+from __future__ import annotations
+
+import jax
+import jax.numpy as jnp
+from reward_context import Text2RewardContext
+
+
+def compute_dense_reward(
+    ctx: Text2RewardContext,
+) -> jax.Array:
+    """Dense reward for commanded Barkour locomotion.
+
+    The main objective is to track commanded torso-local forward velocity,
+    lateral velocity, and yaw rate. Smaller auxiliary terms encourage stable,
+    smooth, and efficient locomotion.
+    """
+
+    # -------------------------------------------------------------------------
+    # Command tracking rewards.
+    # -------------------------------------------------------------------------
+
+    # Track commanded torso-local horizontal linear velocity [vx, vy].
+    lin_vel_error = ctx.base_lin_vel[:2] - ctx.command[:2]
+    lin_vel_error_sq = jnp.sum(jnp.square(lin_vel_error))
+
+    # Exponential tracking reward: 1 when perfect, smoothly decays with error.
+    # A denominator of 0.25 corresponds roughly to a 0.5 m/s tracking scale.
+    lin_vel_tracking_reward = jnp.exp(-lin_vel_error_sq / 0.25)
+
+    # Track commanded torso-local yaw rate wz.
+    yaw_rate_error = ctx.base_ang_vel[2] - ctx.command[2]
+    yaw_rate_error_sq = jnp.square(yaw_rate_error)
+
+    # A denominator of 0.25 corresponds roughly to a 0.5 rad/s yaw-rate scale.
+    yaw_rate_tracking_reward = jnp.exp(-yaw_rate_error_sq / 0.25)
+
+    # -------------------------------------------------------------------------
+    # Stability rewards / penalties.
+    # -------------------------------------------------------------------------
+
+    # Uprightness: projected gravity should have near-zero x/y components.
+    # When upright, projected_gravity is approximately [0, 0, -1].
+    gravity_xy_error_sq = jnp.sum(jnp.square(ctx.projected_gravity[:2]))
+    upright_reward = jnp.exp(-5.0 * gravity_xy_error_sq)
+
+    # Penalize vertical torso velocity, which is usually undesirable for steady
+    # locomotion.
+    vertical_vel_penalty = jnp.square(ctx.base_lin_vel[2])
+
+    # Penalize roll and pitch angular velocity while allowing commanded yaw.
+    roll_pitch_rate_penalty = jnp.sum(jnp.square(ctx.base_ang_vel[:2]))
+
+    # -------------------------------------------------------------------------
+    # Smoothness, energy, and contact regularization.
+    # -------------------------------------------------------------------------
+
+    # Penalize excessive joint motion.
+    joint_vel_penalty = jnp.mean(jnp.square(ctx.joint_vel))
+
+    # Penalize large torques mildly to encourage efficient locomotion.
+    torque_penalty = jnp.mean(jnp.square(ctx.motor_torque))
+
+    # Penalize large deviations from the default joint pose mildly.
+    joint_pos_penalty = jnp.mean(jnp.square(ctx.joint_pos_error))
+
+    # Penalize rapid action changes for smoother normalized joint targets.
+    action_rate_penalty = jnp.mean(jnp.square(ctx.action - ctx.previous_action))
+
+    # Penalize horizontal foot slipping while the foot is in contact.
+    contact = ctx.foot_contact.astype(jnp.float32)
+    foot_horizontal_speed_sq = jnp.sum(
+        jnp.square(ctx.foot_velocity_world[:, :2]), axis=1
+    )
+    foot_slip_penalty = jnp.mean(contact * foot_horizontal_speed_sq)
+
+    # Failure penalty.
+    done_penalty = jnp.where(ctx.done, 1.0, 0.0)
+
+    # -------------------------------------------------------------------------
+    # Weighted sum.
+    # Main task terms dominate; regularization is deliberately weaker.
+    # -------------------------------------------------------------------------
+
+    reward = (
+        1.50 * lin_vel_tracking_reward
+        + 1.00 * yaw_rate_tracking_reward
+        + 0.30 * upright_reward
+        - 0.20 * vertical_vel_penalty
+        - 0.05 * roll_pitch_rate_penalty
+        - 0.001 * joint_vel_penalty
+        - 0.00002 * torque_penalty
+        - 0.03 * joint_pos_penalty
+        - 0.03 * action_rate_penalty
+        - 0.02 * foot_slip_penalty
+        - 1.00 * done_penalty
+    )
+
+    return reward
+```
