@@ -1,0 +1,429 @@
+{
+  "shared_specifications": {
+    "safety_specification": {
+      "predicates": [
+        {
+          "predicate_name": "bounded_roll",
+          "symbolic_form": "Roll <= theta_roll_max",
+          "signal": "Roll",
+          "operator": "<=",
+          "symbolic_parameters": [
+            "theta_roll_max"
+          ],
+          "reason": "Limits excessive lateral body tilt for all locomotion modes."
+        },
+        {
+          "predicate_name": "bounded_pitch",
+          "symbolic_form": "Pitch <= theta_pitch_max",
+          "signal": "Pitch",
+          "operator": "<=",
+          "symbolic_parameters": [
+            "theta_pitch_max"
+          ],
+          "reason": "Limits excessive sagittal body tilt for all locomotion modes."
+        },
+        {
+          "predicate_name": "bounded_base_height",
+          "symbolic_form": "h_base_min <= Base_height <= h_base_max",
+          "signal": "Base_height",
+          "operator": "<=",
+          "symbolic_parameters": [
+            "h_base_min",
+            "h_base_max"
+          ],
+          "reason": "Maintains the base within a feasible height range and discourages collapse or excessive hopping."
+        },
+        {
+          "predicate_name": "bounded_joint_torque",
+          "symbolic_form": "Joint_torque <= tau_joint_max",
+          "signal": "Joint_torque",
+          "operator": "<=",
+          "symbolic_parameters": [
+            "tau_joint_max"
+          ],
+          "reason": "Discourages actuator saturation and unsafe high-effort motions."
+        },
+        {
+          "predicate_name": "bounded_slip",
+          "symbolic_form": "Slip <= slip_max",
+          "signal": "Slip",
+          "operator": "<=",
+          "symbolic_parameters": [
+            "slip_max"
+          ],
+          "reason": "Reduces foot sliding during stance and improves physical plausibility."
+        },
+        {
+          "predicate_name": "bounded_smoothness",
+          "symbolic_form": "Smoothness <= smoothness_max",
+          "signal": "Smoothness",
+          "operator": "<=",
+          "symbolic_parameters": [
+            "smoothness_max"
+          ],
+          "reason": "Discourages abrupt actions or state changes that may destabilize locomotion."
+        }
+      ],
+      "formula": "G_[0,H_safety](Roll <= theta_roll_max ∧ Pitch <= theta_pitch_max ∧ h_base_min <= Base_height <= h_base_max ∧ Joint_torque <= tau_joint_max ∧ Slip <= slip_max ∧ Smoothness <= smoothness_max)"
+    },
+    "tracking_specification": {
+      "predicates": [
+        {
+          "predicate_name": "bounded_velocity_tracking_error",
+          "symbolic_form": "Velocity_tracking_error <= e_vel_max",
+          "signal": "Velocity_tracking_error",
+          "operator": "<=",
+          "symbolic_parameters": [
+            "e_vel_max"
+          ],
+          "reason": "Encourages the robot to follow commanded forward, lateral, and/or yaw velocity commands."
+        }
+      ],
+      "formula": "G_[0,H_track](Velocity_tracking_error <= e_vel_max)"
+    }
+  },
+  "gait_templates": [
+    {
+      "gait_family": "walk-like",
+      "mode_specific_safety": {
+        "predicates": [
+          {
+            "predicate_name": "minimum_support_for_walk",
+            "symbolic_form": "Contact_count >= c_walk_min",
+            "signal": "Contact_count",
+            "operator": ">=",
+            "symbolic_parameters": [
+              "c_walk_min"
+            ],
+            "reason": "Walk-like gaits typically maintain multiple contacts and avoid extended aerial phases."
+          },
+          {
+            "predicate_name": "limited_flight_for_walk",
+            "symbolic_form": "P_flight <= p_flight_walk_max",
+            "signal": "P_flight",
+            "operator": "<=",
+            "symbolic_parameters": [
+              "p_flight_walk_max"
+            ],
+            "reason": "Discourages flight phases in a walking regime."
+          }
+        ],
+        "formula": "G_[0,H_walk_safe](Contact_count >= c_walk_min ∧ P_flight <= p_flight_walk_max)"
+      },
+      "gait_specification": {
+        "predicates": [
+          {
+            "predicate_name": "high_three_or_more_contact_fraction",
+            "symbolic_form": "P_3plus >= p_3plus_walk_min",
+            "signal": "P_3plus",
+            "operator": ">=",
+            "symbolic_parameters": [
+              "p_3plus_walk_min"
+            ],
+            "reason": "Walk-like locomotion is characterized by frequent three-or-more-foot support."
+          },
+          {
+            "predicate_name": "walk_duty_factor_range",
+            "symbolic_form": "df_walk_min <= Duty_factor <= df_walk_max",
+            "signal": "Duty_factor",
+            "operator": "<=",
+            "symbolic_parameters": [
+              "df_walk_min",
+              "df_walk_max"
+            ],
+            "reason": "Constrains stance duration to a walking-like duty factor range."
+          },
+          {
+            "predicate_name": "walk_swing_clearance",
+            "symbolic_form": "Swing_clearance >= clearance_walk_min",
+            "signal": "Swing_clearance",
+            "operator": ">=",
+            "symbolic_parameters": [
+              "clearance_walk_min"
+            ],
+            "reason": "Ensures feet clear the ground during swing."
+          },
+          {
+            "predicate_name": "walk_energy_efficiency",
+            "symbolic_form": "Energy_efficiency <= energy_walk_max",
+            "signal": "Energy_efficiency",
+            "operator": "<=",
+            "symbolic_parameters": [
+              "energy_walk_max"
+            ],
+            "reason": "Encourages economical walking motions."
+          }
+        ],
+        "formula": "G_[0,H_walk](P_3plus >= p_3plus_walk_min ∧ df_walk_min <= Duty_factor <= df_walk_max ∧ Swing_clearance >= clearance_walk_min ∧ Energy_efficiency <= energy_walk_max)"
+      },
+      "combined_symbolic_stl": {
+        "formula_name": "STL_walk_like",
+        "formula": "G_[0,H_safety](Roll <= theta_roll_max ∧ Pitch <= theta_pitch_max ∧ h_base_min <= Base_height <= h_base_max ∧ Joint_torque <= tau_joint_max ∧ Slip <= slip_max ∧ Smoothness <= smoothness_max) ∧ G_[0,H_track](Velocity_tracking_error <= e_vel_max) ∧ G_[0,H_walk_safe](Contact_count >= c_walk_min ∧ P_flight <= p_flight_walk_max) ∧ G_[0,H_walk](P_3plus >= p_3plus_walk_min ∧ df_walk_min <= Duty_factor <= df_walk_max ∧ Swing_clearance >= clearance_walk_min ∧ Energy_efficiency <= energy_walk_max)",
+        "horizon_recommendation": "Use H_walk_total = max(H_safety, H_track, H_walk_safe, H_walk), with H_walk chosen to cover at least one symbolic walking gait cycle T_walk_cycle and preferably multiple cycles, e.g. H_walk >= k_walk_cycles * T_walk_cycle where k_walk_cycles is symbolic.",
+        "parameter_fitting_notes": [
+          "Fit theta_roll_max, theta_pitch_max, h_base_min, h_base_max, tau_joint_max, slip_max, and smoothness_max from safe expert trajectory quantiles with margins.",
+          "Fit e_vel_max from the distribution of expert command-tracking errors at the target walking speed regime.",
+          "Fit c_walk_min, p_flight_walk_max, and p_3plus_walk_min from contact-count statistics of successful walking demonstrations.",
+          "Fit df_walk_min and df_walk_max from empirical stance fractions over expert walking cycles.",
+          "Fit clearance_walk_min from the lower quantile of successful swing-foot clearance values.",
+          "Fit energy_walk_max from expert cost-of-transport or normalized effort statistics."
+        ]
+      },
+      "warnings": [
+        "The allowed grammar does not include explicit sequencing of individual leg contacts, so this walk-like template uses aggregate contact-count and duty-factor statistics rather than a full footfall order specification.",
+        "If Contact_count is integer-valued, smooth robustness may require a differentiable surrogate or smoothing of contact probabilities."
+      ]
+    },
+    {
+      "gait_family": "trot-like",
+      "mode_specific_safety": {
+        "predicates": [
+          {
+            "predicate_name": "limited_flight_for_trot",
+            "symbolic_form": "P_flight <= p_flight_trot_max",
+            "signal": "P_flight",
+            "operator": "<=",
+            "symbolic_parameters": [
+              "p_flight_trot_max"
+            ],
+            "reason": "Allows fitting to either grounded or mildly aerial trots while preventing excessive flight if undesired."
+          }
+        ],
+        "formula": "G_[0,H_trot_safe](P_flight <= p_flight_trot_max)"
+      },
+      "gait_specification": {
+        "predicates": [
+          {
+            "predicate_name": "high_diagonal_two_contact_fraction",
+            "symbolic_form": "P_diag2 >= p_diag2_trot_min",
+            "signal": "P_diag2",
+            "operator": ">=",
+            "symbolic_parameters": [
+              "p_diag2_trot_min"
+            ],
+            "reason": "Trot-like gaits are characterized by diagonal-pair support."
+          },
+          {
+            "predicate_name": "high_two_contact_fraction",
+            "symbolic_form": "P_2contact >= p_2contact_trot_min",
+            "signal": "P_2contact",
+            "operator": ">=",
+            "symbolic_parameters": [
+              "p_2contact_trot_min"
+            ],
+            "reason": "Encourages two-foot support typical of trotting."
+          },
+          {
+            "predicate_name": "low_diagonal_pair_sync_error",
+            "symbolic_form": "Diagonal_pair_sync_error <= e_diag_sync_trot_max",
+            "signal": "Diagonal_pair_sync_error",
+            "operator": "<=",
+            "symbolic_parameters": [
+              "e_diag_sync_trot_max"
+            ],
+            "reason": "Encourages synchronization within diagonal leg pairs."
+          },
+          {
+            "predicate_name": "trot_duty_factor_range",
+            "symbolic_form": "df_trot_min <= Duty_factor <= df_trot_max",
+            "signal": "Duty_factor",
+            "operator": "<=",
+            "symbolic_parameters": [
+              "df_trot_min",
+              "df_trot_max"
+            ],
+            "reason": "Constrains stance duration to a trot-like range."
+          },
+          {
+            "predicate_name": "trot_swing_clearance",
+            "symbolic_form": "Swing_clearance >= clearance_trot_min",
+            "signal": "Swing_clearance",
+            "operator": ">=",
+            "symbolic_parameters": [
+              "clearance_trot_min"
+            ],
+            "reason": "Ensures adequate foot clearance during swing."
+          },
+          {
+            "predicate_name": "trot_energy_efficiency",
+            "symbolic_form": "Energy_efficiency <= energy_trot_max",
+            "signal": "Energy_efficiency",
+            "operator": "<=",
+            "symbolic_parameters": [
+              "energy_trot_max"
+            ],
+            "reason": "Encourages efficient trotting rather than high-effort hopping or dragging."
+          }
+        ],
+        "formula": "G_[0,H_trot](P_diag2 >= p_diag2_trot_min ∧ P_2contact >= p_2contact_trot_min ∧ Diagonal_pair_sync_error <= e_diag_sync_trot_max ∧ df_trot_min <= Duty_factor <= df_trot_max ∧ Swing_clearance >= clearance_trot_min ∧ Energy_efficiency <= energy_trot_max)"
+      },
+      "combined_symbolic_stl": {
+        "formula_name": "STL_trot_like",
+        "formula": "G_[0,H_safety](Roll <= theta_roll_max ∧ Pitch <= theta_pitch_max ∧ h_base_min <= Base_height <= h_base_max ∧ Joint_torque <= tau_joint_max ∧ Slip <= slip_max ∧ Smoothness <= smoothness_max) ∧ G_[0,H_track](Velocity_tracking_error <= e_vel_max) ∧ G_[0,H_trot_safe](P_flight <= p_flight_trot_max) ∧ G_[0,H_trot](P_diag2 >= p_diag2_trot_min ∧ P_2contact >= p_2contact_trot_min ∧ Diagonal_pair_sync_error <= e_diag_sync_trot_max ∧ df_trot_min <= Duty_factor <= df_trot_max ∧ Swing_clearance >= clearance_trot_min ∧ Energy_efficiency <= energy_trot_max)",
+        "horizon_recommendation": "Use H_trot_total = max(H_safety, H_track, H_trot_safe, H_trot), with H_trot chosen to cover at least one symbolic trot cycle T_trot_cycle and preferably multiple cycles, e.g. H_trot >= k_trot_cycles * T_trot_cycle where k_trot_cycles is symbolic.",
+        "parameter_fitting_notes": [
+          "Fit p_diag2_trot_min and p_2contact_trot_min from the fraction of expert windows exhibiting diagonal two-foot support.",
+          "Fit e_diag_sync_trot_max from diagonal-pair contact timing or phase synchronization errors in successful trot demonstrations.",
+          "Fit df_trot_min and df_trot_max from expert trot stance fractions.",
+          "Fit p_flight_trot_max according to whether the expert data contains grounded trots or running trots with short aerial phases.",
+          "Fit clearance_trot_min and energy_trot_max from successful expert swing-clearance and effort distributions.",
+          "Fit shared safety and tracking parameters separately per speed regime if expert data shows speed-dependent safe envelopes."
+        ]
+      },
+      "warnings": [
+        "The template does not explicitly enforce alternation between the two diagonal pairs because the allowed grammar and signals provide only aggregate pair synchronization and contact fractions.",
+        "P_diag2 and P_2contact may be correlated; if reward shaping becomes redundant, one of these predicates can be removed during ablation."
+      ]
+    },
+    {
+      "gait_family": "bound-like",
+      "mode_specific_safety": {
+        "predicates": [
+          {
+            "predicate_name": "bounded_bound_pitch",
+            "symbolic_form": "Pitch <= theta_pitch_bound_max",
+            "signal": "Pitch",
+            "operator": "<=",
+            "symbolic_parameters": [
+              "theta_pitch_bound_max"
+            ],
+            "reason": "Bounding can induce larger sagittal oscillations, so a mode-specific pitch envelope may be useful."
+          },
+          {
+            "predicate_name": "bounded_bound_base_height",
+            "symbolic_form": "h_base_bound_min <= Base_height <= h_base_bound_max",
+            "signal": "Base_height",
+            "operator": "<=",
+            "symbolic_parameters": [
+              "h_base_bound_min",
+              "h_base_bound_max"
+            ],
+            "reason": "Allows a bound-specific vertical motion envelope while preventing collapse or excessive launch height."
+          }
+        ],
+        "formula": "G_[0,H_bound_safe](Pitch <= theta_pitch_bound_max ∧ h_base_bound_min <= Base_height <= h_base_bound_max)"
+      },
+      "gait_specification": {
+        "predicates": [
+          {
+            "predicate_name": "front_pair_synchronization",
+            "symbolic_form": "Front_pair_sync_error <= e_front_sync_bound_max",
+            "signal": "Front_pair_sync_error",
+            "operator": "<=",
+            "symbolic_parameters": [
+              "e_front_sync_bound_max"
+            ],
+            "reason": "Bound-like gaits require the two front legs to move approximately together."
+          },
+          {
+            "predicate_name": "hind_pair_synchronization",
+            "symbolic_form": "Hind_pair_sync_error <= e_hind_sync_bound_max",
+            "signal": "Hind_pair_sync_error",
+            "operator": "<=",
+            "symbolic_parameters": [
+              "e_hind_sync_bound_max"
+            ],
+            "reason": "Bound-like gaits require the two hind legs to move approximately together."
+          },
+          {
+            "predicate_name": "front_hind_phase_offset",
+            "symbolic_form": "phi_bound_min <= Front_hind_phase_error <= phi_bound_max",
+            "signal": "Front_hind_phase_error",
+            "operator": "<=",
+            "symbolic_parameters": [
+              "phi_bound_min",
+              "phi_bound_max"
+            ],
+            "reason": "Encourages alternating front-pair and hind-pair contacts with a bound-like phase relationship."
+          },
+          {
+            "predicate_name": "front_pair_contact_fraction",
+            "symbolic_form": "P_front_pair >= p_front_pair_bound_min",
+            "signal": "P_front_pair",
+            "operator": ">=",
+            "symbolic_parameters": [
+              "p_front_pair_bound_min"
+            ],
+            "reason": "Ensures the front-pair support phase appears sufficiently often."
+          },
+          {
+            "predicate_name": "hind_pair_contact_fraction",
+            "symbolic_form": "P_hind_pair >= p_hind_pair_bound_min",
+            "signal": "P_hind_pair",
+            "operator": ">=",
+            "symbolic_parameters": [
+              "p_hind_pair_bound_min"
+            ],
+            "reason": "Ensures the hind-pair support phase appears sufficiently often."
+          },
+          {
+            "predicate_name": "bound_flight_fraction",
+            "symbolic_form": "P_flight >= p_flight_bound_min",
+            "signal": "P_flight",
+            "operator": ">=",
+            "symbolic_parameters": [
+              "p_flight_bound_min"
+            ],
+            "reason": "Many bound-like gaits include aerial phases; this predicate encourages such behavior when present in expert data."
+          },
+          {
+            "predicate_name": "bound_duty_factor_range",
+            "symbolic_form": "df_bound_min <= Duty_factor <= df_bound_max",
+            "signal": "Duty_factor",
+            "operator": "<=",
+            "symbolic_parameters": [
+              "df_bound_min",
+              "df_bound_max"
+            ],
+            "reason": "Constrains stance duration to a bound-like range."
+          },
+          {
+            "predicate_name": "bound_swing_clearance",
+            "symbolic_form": "Swing_clearance >= clearance_bound_min",
+            "signal": "Swing_clearance",
+            "operator": ">=",
+            "symbolic_parameters": [
+              "clearance_bound_min"
+            ],
+            "reason": "Ensures adequate clearance during fast aerial or swing phases."
+          },
+          {
+            "predicate_name": "bound_energy_efficiency",
+            "symbolic_form": "Energy_efficiency <= energy_bound_max",
+            "signal": "Energy_efficiency",
+            "operator": "<=",
+            "symbolic_parameters": [
+              "energy_bound_max"
+            ],
+            "reason": "Discourages unnecessarily high-effort bounding."
+          }
+        ],
+        "formula": "G_[0,H_bound](Front_pair_sync_error <= e_front_sync_bound_max ∧ Hind_pair_sync_error <= e_hind_sync_bound_max ∧ phi_bound_min <= Front_hind_phase_error <= phi_bound_max ∧ P_front_pair >= p_front_pair_bound_min ∧ P_hind_pair >= p_hind_pair_bound_min ∧ P_flight >= p_flight_bound_min ∧ df_bound_min <= Duty_factor <= df_bound_max ∧ Swing_clearance >= clearance_bound_min ∧ Energy_efficiency <= energy_bound_max)"
+      },
+      "combined_symbolic_stl": {
+        "formula_name": "STL_bound_like",
+        "formula": "G_[0,H_safety](Roll <= theta_roll_max ∧ Pitch <= theta_pitch_max ∧ h_base_min <= Base_height <= h_base_max ∧ Joint_torque <= tau_joint_max ∧ Slip <= slip_max ∧ Smoothness <= smoothness_max) ∧ G_[0,H_track](Velocity_tracking_error <= e_vel_max) ∧ G_[0,H_bound_safe](Pitch <= theta_pitch_bound_max ∧ h_base_bound_min <= Base_height <= h_base_bound_max) ∧ G_[0,H_bound](Front_pair_sync_error <= e_front_sync_bound_max ∧ Hind_pair_sync_error <= e_hind_sync_bound_max ∧ phi_bound_min <= Front_hind_phase_error <= phi_bound_max ∧ P_front_pair >= p_front_pair_bound_min ∧ P_hind_pair >= p_hind_pair_bound_min ∧ P_flight >= p_flight_bound_min ∧ df_bound_min <= Duty_factor <= df_bound_max ∧ Swing_clearance >= clearance_bound_min ∧ Energy_efficiency <= energy_bound_max)",
+        "horizon_recommendation": "Use H_bound_total = max(H_safety, H_track, H_bound_safe, H_bound), with H_bound chosen to cover at least one symbolic bound cycle T_bound_cycle and preferably multiple cycles, e.g. H_bound >= k_bound_cycles * T_bound_cycle where k_bound_cycles is symbolic.",
+        "parameter_fitting_notes": [
+          "Fit e_front_sync_bound_max and e_hind_sync_bound_max from within-pair timing errors in successful bounding demonstrations.",
+          "Fit phi_bound_min and phi_bound_max from the empirical front-hind phase offset distribution.",
+          "Fit p_front_pair_bound_min, p_hind_pair_bound_min, and p_flight_bound_min from contact-mode occupancy fractions in expert bounding windows.",
+          "Fit df_bound_min and df_bound_max from stance fractions of front and hind pairs over expert bound cycles.",
+          "Fit theta_pitch_bound_max, h_base_bound_min, and h_base_bound_max from bound-specific body-pitch and base-height envelopes, since bounding may require larger sagittal and vertical excursions than walking or trotting.",
+          "Fit clearance_bound_min and energy_bound_max from expert swing-clearance and effort statistics at the bound speed regime."
+        ]
+      },
+      "warnings": [
+        "Requiring P_flight >= p_flight_bound_min assumes the desired bound includes an aerial phase; if expert trajectories show grounded bounding, this predicate should be relaxed or removed.",
+        "The shared pitch and base-height safety predicates may conflict with bound-specific envelopes unless fitted consistently; the effective constraint is the intersection of shared and mode-specific bounds."
+      ]
+    }
+  ],
+  "global_warnings": [
+    "All thresholds and horizons are symbolic as requested and must be fitted from expert data before use.",
+    "The formulas use only the allowed STL grammar forms, primarily globally enforced conjunctions over finite symbolic horizons.",
+    "Signals such as Duty_factor, P_flight, P_diag2, and synchronization errors are assumed to be computed over the same finite evaluation window or a compatible symbolic subwindow.",
+    "For dense PPO reward shaping, robustness values for integer or event-like contact signals may need differentiable smoothing, such as contact probabilities or filtered contact indicators.",
+    "The allowed grammar does not include nested until, explicit leg-indexed sequencing, or disjunction, so the templates describe gait families through aggregate contact statistics and synchronization errors rather than exact footfall automata."
+  ]
+}

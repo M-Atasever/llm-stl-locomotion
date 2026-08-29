@@ -1,0 +1,92 @@
+{
+  "stl_specifications": {
+    "specification_group_1": {
+      "predicates": [
+        {
+          "predicate_1_name": "forward_velocity_tracking",
+          "symbolic_form": "e_vx <= eps_vx",
+          "signal": "Velocity tracking",
+          "operator": "<=",
+          "symbolic_parameters": [
+            "e_vx = |v_x - v_x_cmd|",
+            "eps_vx"
+          ],
+          "reason": "Encourages the robot to track the commanded forward velocity with bounded error."
+        },
+        {
+          "predicate_2_name": "lateral_velocity_tracking",
+          "symbolic_form": "e_vy <= eps_vy",
+          "signal": "Velocity tracking",
+          "operator": "<=",
+          "symbolic_parameters": [
+            "e_vy = |v_y - v_y_cmd|",
+            "eps_vy"
+          ],
+          "reason": "Encourages accurate lateral velocity tracking and prevents excessive sideways drift."
+        },
+        {
+          "predicate_3_name": "yaw_rate_tracking",
+          "symbolic_form": "e_wz <= eps_wz",
+          "signal": "Velocity tracking",
+          "operator": "<=",
+          "symbolic_parameters": [
+            "e_wz = |omega_z - omega_z_cmd|",
+            "eps_wz"
+          ],
+          "reason": "Encourages the robot to track the commanded angular yaw velocity."
+        }
+      ],
+      "formula": "G_[0,H](e_vx <= eps_vx ∧ e_vy <= eps_vy ∧ e_wz <= eps_wz)"
+    },
+    "specification_group_2": {
+      "predicates": [
+        {
+          "predicate_1_name": "base_height_bounds",
+          "symbolic_form": "z_min <= z_base <= z_max",
+          "signal": "Safety",
+          "operator": "<= <= ",
+          "symbolic_parameters": [
+            "z_base",
+            "z_min",
+            "z_max"
+          ],
+          "reason": "Keeps the robot body within a safe height range, discouraging collapse, excessive crouching, or unrealistic jumping."
+        },
+        {
+          "predicate_2_name": "body_tilt_bound",
+          "symbolic_form": "body_tilt_angle <= theta_max",
+          "signal": "Safety",
+          "operator": "<=",
+          "symbolic_parameters": [
+            "body_tilt_angle = max(|roll|, |pitch|)",
+            "theta_max"
+          ],
+          "reason": "Encourages stable upright locomotion by penalizing excessive roll or pitch."
+        },
+        {
+          "predicate_3_name": "stance_contact_count_bounds",
+          "symbolic_form": "n_contact_min <= n_stance_contacts <= n_contact_max",
+          "signal": "Contact count",
+          "operator": "<= <=",
+          "symbolic_parameters": [
+            "n_stance_contacts",
+            "n_contact_min",
+            "n_contact_max"
+          ],
+          "reason": "Encourages feasible quadruped locomotion by maintaining a reasonable number of feet in contact with the ground."
+        }
+      ],
+      "formula": "G_[0,H](z_min <= z_base <= z_max ∧ body_tilt_angle <= theta_max ∧ n_contact_min <= n_stance_contacts <= n_contact_max)"
+    }
+  },
+  "combined_symbolic_stl": {
+    "formula": "G_[0,H](e_vx <= eps_vx ∧ e_vy <= eps_vy ∧ e_wz <= eps_wz ∧ z_min <= z_base <= z_max ∧ body_tilt_angle <= theta_max ∧ n_contact_min <= n_stance_contacts <= n_contact_max)",
+    "horizon_recommendation": "Use H equal to approximately 2 to 3 nominal gait cycles, i.e., H = N_gait*T_gait with N_gait in [2,3]. For Barkour-style trotting in MuJoCo, a practical starting point is H around 0.6 to 1.0 seconds, then tune based on the controller frequency and observed gait period."
+  },
+  "warnings": [
+    "The STL template assumes velocity errors e_vx, e_vy, and e_wz are precomputed as nonnegative scalar signals.",
+    "The body_tilt_angle signal is assumed to be a nonnegative scalar summary of roll and pitch, for example max(|roll|, |pitch|).",
+    "The contact-count bounds should be tuned to the desired gait. For trotting, n_contact_min = 1 or 2 and n_contact_max = 4 are common starting choices, but overly strict bounds may conflict with transient maneuvers or high-speed commands.",
+    "More detailed gait specifications using periodic contact, pair synchronization, duty factor, or phase offset may be useful, but they require reliable gait phase or foot-contact event signals. They are omitted here to keep the template simple and unambiguous under the allowed grammar."
+  ]
+}

@@ -1,0 +1,107 @@
+You are an expert in formal methods and reinforcement learning for robotics.
+Context: We are training a policy for a Barkour quadruped robot in a MuJoCo simulation environment. The agent uses Proximal Policy Optimization (PPO) to track commanded forward, lateral, and angular velocities.
+Task: Propose valid Signal Temporal Logic (STL) templates to specify the quadruped's locomotion behavior. These STL specifications will be translated into a smooth, quantitative robustness score evaluated over a finite rolling history window $[t-H, t]$ to serve as a dense, continuous reward signal.
+Important constraints:
+1. You must use only the allowed STL grammar and allowed signals.
+2. Your output must be syntactically valid JSON only.
+3. In case of ambiguity or uncertainty, return the simplest reasonable template and describe the uncertainty in the warnings.
+
+Allowed STL Grammar:
+G_[0,H](predicate >= threshold)
+G_[0,H](predicate <= threshold)
+G_[0,H](lower <= predicate <= upper)
+F_[0,H](event)
+F_[0,H](predicate >= threshold)
+G_[0,H](F_[0,h](event))
+G_[0,H](predicate1 ∧ predicate2 ∧ ... ∧ predicateN)
+G_[0,H](gait_mode => conjunction_of_predicates)
+
+
+You do not have to use every signal or every possible specification category. Select the predicates that you consider useful.
+
+Allowed Signal Categories:
+Safety
+Velocity tracking
+Contact count
+Periodic contact
+Pair synchronization
+Pair alternation
+Duty factor
+Phase offset
+Slip
+Swing clearance
+Energy efficiency
+Smoothness
+
+Return:
+1. A complete symbolic STL formula.
+2. A recommendation for the symbolic evaluation horizon.
+3. Any assumptions, uncertainties, possible conflicts, or warnings.
+
+Return JSON using exactly this schema:
+
+{"stl_specifications":
+	{"specification_group_1": {
+    "predicates": [
+      {
+        "predicate_1_name": "",
+        "symbolic_form": "",
+        "signal": "",
+        "operator": "",
+        "symbolic_parameters": [],
+        "reason": ""
+      },
+	 {
+        "predicate_2_name": "",
+        "symbolic_form": "",
+        "signal": "",
+        "operator": "",
+        "symbolic_parameters": [],
+        "reason": ""
+      },
+	 {
+        "predicate_3_name": "",
+        "symbolic_form": "",
+        "signal": "",
+        "operator": "",
+        "symbolic_parameters": [],
+        "reason": ""
+      }
+    ],
+    "formula": ""
+  },
+ "specification_group_2": {
+    "predicates": [
+      {
+        "predicate_1_name": "",
+        "symbolic_form": "",
+        "signal": "",
+        "operator": "",
+        "symbolic_parameters": [],
+        "reason": ""
+      },
+	 {
+        "predicate_2_name": "",
+        "symbolic_form": "",
+        "signal": "",
+        "operator": "",
+        "symbolic_parameters": [],
+        "reason": ""
+      },
+	 {
+        "predicate_3_name": "",
+        "symbolic_form": "",
+        "signal": "",
+        "operator": "",
+        "symbolic_parameters": [],
+        "reason": ""
+      }
+  ],
+    "formula": ""
+	}},
+ "combined_symbolic_stl": {
+ "formula": "",
+ "horizon_recommendation": "",
+  },
+  "warnings": []
+}

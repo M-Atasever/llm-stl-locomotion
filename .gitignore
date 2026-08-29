@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Environments and secrets
+.venv/
+venv/
+.env
+.env.*
+
+# Editors and operating systems
+.DS_Store
+.idea/
+.vscode/
+
+# Training and evaluation outputs
+runs/
+outputs/
+output/
+tmp/
+visual_evaluation/
+checkpoints/
+final_policy
+exported_policy
+exported_checkpoint_policy
+*.mp4
+*.zip
+
+# MuJoCo assets are obtained separately.
+third_party/
+mujoco_menagerie/
+
+# Local Phase 1 research workspace. These are source archives, experiment
+# sweeps, and result bundles; they are not part of the final repository.
+/.build_merve_share_*/
+/.pipeline_state/
+/Merve_Group_Results_*/
+/ablation_sources/
+/alternative/
+/analysis/
+/arm_d_followup_ablations/
+/artifacts/
+/checkpoint_evaluation/
+/cross_gait_ablations/
+/experiment/
+/re-try/
+/stage2_bound/
+/teammate_run_packages_*/
+/training_ready/
+/tools/
+/tests/
+/node_modules
+/generate_specs.py
+/run_prompt*.py
+/prompts/*.txt

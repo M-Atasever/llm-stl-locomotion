@@ -1,0 +1,40 @@
+Attach the output JSON file from the previous step and code files from below link:
+https://drive.google.com/drive/folders/1QOY4EBZ6qvPibm3uoCe9xMDlUY4n2MRz?usp=sharing
+
+You are helping implement Signal Temporal Logic–based reward shaping for a quadruped locomotion
+reinforcement learning project. You will receive two types of input:
+1. An STL specification JSON file generated in a previous stage.
+2. The existing project code files. These files contain the quadruped environment, reward computation,
+state and signal extraction, configuration, training setup, and any existing STL-related utility functions.
+
+Goal: Revise the supplied project files so that the STL specifications in the JSON file are implemented as
+reward functions in the existing quadruped locomotion training pipeline. The resulting implementation
+must be compatible with the current project architecture and should be ready for PPO training once
+numerical values are supplied for the symbolic parameters.
+
+
+Please review the generated code to ensure it is both syntactically and semantically correct. Once
+verified, the next step is to fill in the parameters and thresholds for the LLM-generated parametric STL
+templates.
+
+For example, consider the template: G_[0,H](robot's height >= threshold). This specifies that the robot's
+height must remain above a certain value to prevent falling. To find these specific threshold values, refer
+to the configs/coeff_config.py file in our github repository.
+
+On line 60, you will see com_z_by_mode = (0.18, 0.22, 0.16). This means that the center of mass
+z-coordinate must be at least 0.18 for walking, 0.22 for trotting, and 0.16 for bounding gaits.
+
+If the LLM did not separate the thresholds by gait mode and you need to use a single universal value:
+
+    ●​ For predicate >= threshold specifications, choose the minimum value (e.g., 0.16).
+    ●​ For predicate <= threshold specifications, choose the maximum value.
+
+If the LLM generates a specification that doesn't have a corresponding threshold in our current config file,
+please let me know.
+
+Now, the code should be ready for training. For the training, we first exclude bound gait and train the
+model for walk and trot. Adapt all the code files accordingly. (in Barkour.py file, you should choose
+command_sampling = "walk_trot_only") Then, run the training for 400M.
+
+Test (visually) the trained model for v=0.3 / 0.5 / 0.9 / 1.0 / 1.2 m/s velocities. If it looks fine, we are done.
+If not, continue with data collection and analysis steps below.
