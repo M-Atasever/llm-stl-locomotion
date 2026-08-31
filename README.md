@@ -7,8 +7,6 @@ GPT and Qwen implementations are organized into two formulations:
 - **Gait-agnostic:** one shared STL formula is used across commanded speeds, leaving the policy free to discover its locomotion pattern.
 - **Multi-gait:** speed-conditioned STL objectives encode walk-like, trot-like, and bound-like behavior in one policy.
 
-Only the Phase 1 pipeline source is included. Experiment sweeps, non-selected runs, checkpoints, logs, videos, and other ablation artifacts are intentionally excluded. The supplied Qwen source is included with unresolved settings explicitly marked `PLACEHOLDER`; see its README before running it.
-
 ## Repository layout
 
 ```text
@@ -17,10 +15,10 @@ llm-stl-locomotion/
 ├── mjx.yml
 ├── .gitignore
 ├── src/
-│   ├── barkour.py                  # PLACEHOLDER shared entry point
-│   ├── training.py                 # PLACEHOLDER shared entry point
-│   ├── training_curriculum.py      # PLACEHOLDER shared entry point
-│   ├── testing.py                  # PLACEHOLDER shared entry point
+│   ├── barkour.py                  
+│   ├── training.py                 
+│   ├── training_curriculum.py      
+│   ├── testing.py                  
 │   ├── GPT/
 │   │   ├── gait_agnostic/           # final GPT gait-agnostic pipeline
 │   │   └── multi_gait/              # final GPT multi-gait pipeline
@@ -35,7 +33,7 @@ llm-stl-locomotion/
     └── multi_gait/                  # GPT prompts plus Qwen/ snapshots
 ```
 
-The four top-level `src` modules are explicit placeholders because no single shared implementation was established across the models and formulations. Their source is kept separately under `src/GPT/` and `src/Qwen/` so the configurations are not silently mixed.
+Each model's source is kept separately under `src/GPT/` and `src/Qwen/` so the configurations are not silently mixed.
 
 ## Final GPT pipelines
 
@@ -48,11 +46,8 @@ Each directory contains its environment, STL configuration, reward implementatio
 
 ## Qwen pipelines
 
-See [src/Qwen/README.md](src/Qwen/README.md) for the archive-derived pipeline, setup, and outstanding `PLACEHOLDER` items.
-
 - **Gait-agnostic:** expert-trajectory collection, q50 (median) filtering, and an eight-stage, 400M-step command curriculum. The supplied filtered reward uses `H=1`; its change from the collection horizon has no supplied rationale.
-- **Multi-gait:** a 400M-step walk/trot trainer and a separate 400M-step mixed-gait checkpoint-continuation trainer. The exact continuation checkpoint is `PLACEHOLDER`.
-- **Unresolved multi-gait configuration:** the supplied buffer length `H=1` is below the eight-step gait-reward warmup and the declared per-mode windows. Numerical values are preserved; a setup guard stops execution until the intended final configuration is confirmed. It is not presented as a validated runnable final configuration.
+- **Multi-gait:** a 400M-step walk/trot trainer and a separate 400M-step mixed-gait checkpoint-continuation trainer. 
 
 ## Environment setup
 
@@ -91,12 +86,12 @@ python training.py \
 python testing.py --policy PLACEHOLDER --no-render
 ```
 
-`PLACEHOLDER` denotes a checkpoint path that is not included in this source-only repository.
+`PLACEHOLDER` denotes a checkpoint path.
 
 ## Baselines
 
 - `baselines/text2reward/` contains the gait-agnostic and multi-gait Text2Reward prompts and retained generated reward modules.
-- `baselines/expert_oracle/` documents the expert-switching oracle. Its policy-download link remains a `PLACEHOLDER` until the authoritative Google Drive folder is provided.
+- `baselines/expert_oracle/` documents the expert-switching oracle.
 
 ## Papers and project media
 
