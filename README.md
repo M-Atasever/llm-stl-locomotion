@@ -46,8 +46,10 @@ Each directory contains its environment, STL configuration, reward implementatio
 
 ## Qwen pipelines
 
-- **Gait-agnostic:** expert-trajectory collection, q50 (median) filtering, and an eight-stage, 400M-step command curriculum. The supplied filtered reward uses `H=1`; its change from the collection horizon has no supplied rationale.
-- **Multi-gait:** a 400M-step walk/trot trainer and a separate 400M-step mixed-gait checkpoint-continuation trainer. 
+| Formulation | Final source | STL setup | Training setup |
+| --- | --- | --- | --- |
+| Gait-agnostic | `src/Qwen/gait_agnostic/` | Shared q50-filtered reward; supplied horizon `H=1`; rationale for its change from the collection horizon was not supplied | Expert-trajectory collection and q50 (median) filtering, followed by an eight-stage, 400M-step command curriculum |
+| Multi-gait | `src/Qwen/multi_gait/` | Gait-conditioned walk/trot/bound reward | 400M-step walk/trot training followed by a separate 400M-step mixed-gait checkpoint continuation |
 
 ## Environment setup
 
