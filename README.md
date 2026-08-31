@@ -48,7 +48,7 @@ Each directory contains its environment, STL configuration, reward implementatio
 
 | Formulation | Final source | STL setup | Training setup |
 | --- | --- | --- | --- |
-| Gait-agnostic | `src/Qwen/gait_agnostic/` | Shared q50-filtered reward; supplied horizon `H=1`; rationale for its change from the collection horizon was not supplied | Expert-trajectory collection and q50 (median) filtering, followed by an eight-stage, 400M-step command curriculum |
+| Gait-agnostic | `src/Qwen/gait_agnostic/` | Shared q50-filtered reward; supplied horizon `H=1` | Expert-trajectory collection and q50 (median) filtering, followed by an eight-stage, 400M-step command curriculum |
 | Multi-gait | `src/Qwen/multi_gait/` | Gait-conditioned walk/trot/bound reward | 400M-step walk/trot training followed by a separate 400M-step mixed-gait checkpoint continuation |
 
 ## Environment setup
