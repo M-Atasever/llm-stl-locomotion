@@ -97,17 +97,25 @@ python testing.py --policy PLACEHOLDER --no-render
 
 ## Papers and project media
 
-- Previous paper: **PLACEHOLDER**
-- Previous paper repository: **PLACEHOLDER**
+- [Previous paper](https://arxiv.org/abs/2607.00442)
+- [Previous paper repository](https://github.com/M-Atasever/STL-based-Quadruped-Locomotion)
 - Current paper: **PLACEHOLDER**
-- Project website and videos: **PLACEHOLDER**
+- [Project website and videos](https://stl-locomotion.github.io)
 
 ## Citation
 
 Previous paper citation:
 
 ```bibtex
-PLACEHOLDER
+@misc{atasever2026learninggaitawarequadrupedlocomotion,
+      title={Learning Gait-Aware Quadruped Locomotion with Temporal Logic Specifications}, 
+      author={Merve Atasever and Cagan Bakirci and Alfredo Reina Corona and Keyan Azbijari and Jyotirmoy V. Deshmukh},
+      year={2026},
+      eprint={2607.00442},
+      archivePrefix={arXiv},
+      primaryClass={cs.RO},
+      url={https://arxiv.org/abs/2607.00442}, 
+}
 ```
 
 Current paper citation:
