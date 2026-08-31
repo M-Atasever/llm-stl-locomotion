@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "status": "frozen_before_training",
+  "recorded_date": "2026-08-11",
+  "condition_id": "multi_gait_component_q50_baseline_weight",
+  "source_evidence": {
+    "statistics_path": "q05_results_multi_gait.tsv",
+    "quantile_column": "q50",
+    "walking_expert_rows_analyzed": 22500,
+    "trotting_expert_rows_analyzed": 22500,
+    "warmup_timesteps_ignored_per_trajectory": 50
+  },
+  "rule": {
+    "level": "individual_component",
+    "decision": "disable an active component only when its mode-specific q50 is strictly negative",
+    "grouped_scores": "diagnostic only; never disable a whole group from its grouped q50",
+    "velocity_tracking": "protected regardless of quantile"
+  },
+  "walk": {
+    "retained": {
+      "rho_torque": 7.711766481399536,
+      "rho_roll": 0.1548725962638855,
+      "rho_pitch": 0.1123587265610694,
+      "rho_tracking": 0.542702853679657,
+      "rho_no_flight": 0.010000001490116109,
+      "rho_duty_factor_high": 0.0300000309944152
+    },
+    "disabled_but_diagnostic": {
+      "rho_comz": -0.0467215031385421,
+      "rho_slip": -0.0273119509220123,
+      "rho_3plus_event": -0.1333333253860473
+    }
+  },
+  "trot": {
+    "retained": {
+      "rho_torque": 5.5426859855651855,
+      "rho_roll": 0.0937383919954299,
+      "rho_pitch": 0.0959709733724594,
+      "rho_slip": 0.0416833758354187,
+      "rho_tracking": 0.4969453811645508,
+      "rho_p2": 0.1333333849906921,
+      "rho_diag_phase": 0.0266666635870933,
+      "rho_flight": 0.1000000014901161
+    },
+    "disabled_but_diagnostic": {
+      "rho_comz": -0.0365846157073974,
+      "rho_diag2": -0.1566666364669799
+    }
+  },
+  "weights": {
+    "w_track_by_mode": [1.0, 1.0, 1.15]
+  }
+}

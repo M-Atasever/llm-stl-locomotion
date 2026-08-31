@@ -1,0 +1,5 @@
+Please write a script to collect trajectory data by evaluating my existing expert policy with an STL-based method. Requirements:
+1-) Generate 50 trajectories, each lasting 500 timesteps.
+2-) Compute and record both the individual and grouped STL robustness scores at every single timestep.
+3-) The final data structure should allow me to easily analyze and compare the robustness scores to determine which ones provide the most useful signal.
+(You can check out the attached test file as an example for how to load a trained model.)

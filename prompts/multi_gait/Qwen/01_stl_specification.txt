@@ -1,0 +1,202 @@
+You are helping design temporal logic specifications for quadruped locomotion.
+
+Goal:
+We would like to introduce a framework where distinct quadruped gaits are specified using parameterized constraints expressed in Signal Temporal Logic (STL). These specifications may include safety bounds, gait synchronization constraints, velocity command tracking, stability, and locomotion-efficiency requirements.
+
+Your task is to propose valid parametric STL templates for three speed regimes: walking, trot, and bound.
+
+From the temporal logic specifications you provide, we will develop a reward shaping mechanism that gives a reinforcement learning agent a dense and continuous reward signal encoding the desired behaviors. The rewards will be computed at every timestep using a smooth approximation of STL robustness evaluated over a finite temporal window [t-H,t], where H is the evaluation horizon. The resulting rewards will be used for training with Proximal Policy Optimization (PPO).
+
+The numerical values of the parameters will later be fitted using expert trajectories. Therefore, you should determine the structure of each STL template, but you should not assign numerical threshold values.
+
+Important constraints:
+1. You must use only the allowed STL grammar and allowed signals.
+2. Do not choose numerical thresholds. Use symbolic parameters only.
+3. Temporal horizons should also be symbolic.
+4. Your output must be syntactically valid JSON only.
+5. In case of ambiguity or uncertainty, return the simplest reasonable template and describe the uncertainty in the warnings.
+
+Allowed STL Grammar:
+G_[0,H](predicate >= threshold)
+G_[0,H](predicate <= threshold)
+G_[0,H](lower <= predicate <= upper)
+F_[0,H](event)
+F_[0,H](predicate >= threshold)
+G_[0,H](F_[0,h](event))
+G_[0,H](predicate1 ∧ predicate2 ∧ ... ∧ predicateN)
+G_[0,H](gait_mode => conjunction_of_predicates)
+
+A suitable general structure is:
+STL_SPEC =
+    G_[0,H](safety_predicates)
+    ∧ G_[0,H](velocity_tracking_predicates)
+    ∧ G_[0,H](gait_structure_predicates)
+
+You do not have to use every signal or every possible specification category. Select the predicates that you consider useful and appropriate for each gait.
+
+Allowed Signal Categories:
+Safety
+Velocity tracking
+Contact count
+Periodic contact
+Pair synchronization
+Pair alternation
+Duty factor
+Phase offset
+Slip
+Swing clearance
+Energy efficiency
+Smoothness
+
+Some concrete examples of signals include:
+"Velocity_tracking_error": Error between measured and commanded velocity.
+"Roll": Magnitude or signed value of the robot base roll angle.
+"Pitch": Magnitude or signed value of the robot base pitch angle.
+"Base_height": Height of the robot base or center of mass.
+"Joint_torque": Applied actuator torque.
+"Contact_count": Number of feet currently in contact with the ground.
+"P_diag2": Fraction of timesteps in the evaluation window with diagonal two-foot support.
+"P_2contact": Fraction of timesteps in the evaluation window with exactly two feet in contact.
+"P_3plus": Fraction of timesteps in the evaluation window with at least three feet in contact.
+"P_flight": Fraction of timesteps in the evaluation window with zero feet in contact.
+"P_front_pair": Fraction of timesteps in the evaluation window with only the front pair in contact.
+"P_hind_pair": Fraction of timesteps in the evaluation window with only the hind pair in contact.
+"Diagonal_pair_sync_error": Synchronization error between diagonal leg pairs.
+"Front_pair_sync_error": Synchronization error between the two front legs.
+"Hind_pair_sync_error": Synchronization error between the two hind legs.
+"Front_hind_phase_error": Phase error between front-pair and hind-pair contact events.
+"Duty_factor": Fraction of a gait cycle during which a foot or group of feet is in contact.
+
+Allowed Gait Family:
+walk-like
+trot-like
+bound-like
+
+Task:
+First, generate shared safety and velocity-tracking specifications that are applicable to all three gait families. Then, generate one mode-specific gait specification for each gait family: walk-like, trot-like, and bound-like. You may additionally generate mode-specific safety.
+
+Return:
+1. Shared parametric STL specifications for safety and velocity tracking.
+2. A valid mode-specific parametric STL template for each of the three gait families.
+3. The safety, tracking, and gait-related predicates selected from the allowed signals.
+4. A complete symbolic STL formula for each gait family, combining the shared and applicable mode-specific specifications.
+5. A recommendation for the symbolic evaluation horizon for each gait family.
+6. Notes describing how the symbolic parameters may be fitted from successful expert trajectories.
+7. Any assumptions, uncertainties, possible conflicts, or warnings.
+
+Return JSON using exactly this schema:
+
+{
+  "shared_specifications": {
+    "safety_specification": {
+      "predicates": [
+        {
+          "predicate_name": "",
+          "symbolic_form": "",
+          "signal": "",
+          "operator": "",
+          "symbolic_parameters": [],
+          "reason": ""
+        }
+      ],
+      "formula": ""
+    },
+    "tracking_specification": {
+      "predicates": [
+        {
+          "predicate_name": "",
+          "symbolic_form": "",
+          "signal": "",
+          "operator": "",
+          "symbolic_parameters": [],
+          "reason": ""
+        }
+      ],
+      "formula": ""
+    }
+  },
+  "gait_templates": [
+    {
+      "gait_family": "walk-like",
+      "mode_specific_safety": {
+        "predicates": [],
+        "formula": ""
+      },
+       "gait_specification": {
+        "predicates": [
+          {
+            "predicate_name": "",
+            "symbolic_form": "",
+            "signal": "",
+            "operator": "",
+            "symbolic_parameters": [],
+            "reason": ""
+          }
+        ],
+        "formula": ""
+      },
+      "combined_symbolic_stl": {
+        "formula_name": "",
+        "formula": "",
+        "horizon_recommendation": "",
+        "parameter_fitting_notes": []
+      },
+      "warnings": []
+    },
+    {
+      "gait_family": "trot-like",
+      "mode_specific_safety": {
+        "predicates": [],
+        "formula": ""
+      },
+      "gait_specification": {
+        "predicates": [
+          {
+            "predicate_name": "",
+            "symbolic_form": "",
+            "signal": "",
+            "operator": "",
+            "symbolic_parameters": [],
+            "reason": ""
+          }
+        ],
+        "formula": ""
+      },
+      "combined_symbolic_stl": {
+        "formula_name": "",
+        "formula": "",
+        "horizon_recommendation": "",
+        "parameter_fitting_notes": []
+      },
+      "warnings": []
+    },
+    {
+      "gait_family": "bound-like",
+      "mode_specific_safety": {
+        "predicates": [],
+        "formula": ""
+      },
+      "gait_specification": {
+        "predicates": [
+          {
+            "predicate_name": "",
+            "symbolic_form": "",
+            "signal": "",
+            "operator": "",
+            "symbolic_parameters": [],
+            "reason": ""
+          }
+        ],
+        "formula": ""
+      },
+      "combined_symbolic_stl": {
+        "formula_name": "",
+        "formula": "",
+        "horizon_recommendation": "",
+        "parameter_fitting_notes": []
+      },
+      "warnings": []
+    }
+  ],
+  "global_warnings": []
+}

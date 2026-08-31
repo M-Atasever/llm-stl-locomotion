@@ -2,12 +2,12 @@
 
 This repository contains the Phase 1 final pipeline for training Barkour locomotion policies with dense rewards derived from LLM-generated Signal Temporal Logic (STL) specifications.
 
-Two GPT-based formulations are included:
+GPT and Qwen implementations are organized into two formulations:
 
 - **Gait-agnostic:** one shared STL formula is used across commanded speeds, leaving the policy free to discover its locomotion pattern.
 - **Multi-gait:** speed-conditioned STL objectives encode walk-like, trot-like, and bound-like behavior in one policy.
 
-Only the selected Phase 1 implementations are included. Experiment sweeps, non-selected runs, checkpoints, logs, videos, and other ablation artifacts are intentionally excluded. Qwen files are not included in this version and will be added when they are available.
+Only the Phase 1 pipeline source is included. Experiment sweeps, non-selected runs, checkpoints, logs, videos, and other ablation artifacts are intentionally excluded. The supplied Qwen source is included with unresolved settings explicitly marked `PLACEHOLDER`; see its README before running it.
 
 ## Repository layout
 
@@ -21,18 +21,21 @@ llm-stl-locomotion/
 │   ├── training.py                 # PLACEHOLDER shared entry point
 │   ├── training_curriculum.py      # PLACEHOLDER shared entry point
 │   ├── testing.py                  # PLACEHOLDER shared entry point
-│   └── GPT/
-│       ├── gait_agnostic/           # final GPT gait-agnostic pipeline
-│       └── multi_gait/              # final GPT multi-gait pipeline
+│   ├── GPT/
+│   │   ├── gait_agnostic/           # final GPT gait-agnostic pipeline
+│   │   └── multi_gait/              # final GPT multi-gait pipeline
+│   └── Qwen/
+│       ├── gait_agnostic/           # collection, q50 filter, curriculum
+│       └── multi_gait/              # supplied two-stage training source
 ├── baselines/
 │   ├── text2reward/
 │   └── expert_oracle/
 └── prompts/
-    ├── gait_agnostic/
-    └── multi_gait/
+    ├── gait_agnostic/               # GPT prompts plus Qwen/ snapshots
+    └── multi_gait/                  # GPT prompts plus Qwen/ snapshots
 ```
 
-The four top-level `src` modules are explicit placeholders because no single shared implementation was established across the two final formulations. The complete runnable implementations are kept separately under `src/GPT/` so their verified configurations are not silently mixed.
+The four top-level `src` modules are explicit placeholders because no single shared implementation was established across the models and formulations. Their source is kept separately under `src/GPT/` and `src/Qwen/` so the configurations are not silently mixed.
 
 ## Final GPT pipelines
 
@@ -43,6 +46,14 @@ The four top-level `src` modules are explicit placeholders because no single sha
 
 Each directory contains its environment, STL configuration, reward implementation, trainer, evaluator, and generated symbolic specification. See the formulation-specific README before running it.
 
+## Qwen pipelines
+
+See [src/Qwen/README.md](src/Qwen/README.md) for the archive-derived pipeline, setup, and outstanding `PLACEHOLDER` items.
+
+- **Gait-agnostic:** expert-trajectory collection, q50 (median) filtering, and an eight-stage, 400M-step command curriculum. The supplied filtered reward uses `H=1`; its change from the collection horizon has no supplied rationale.
+- **Multi-gait:** a 400M-step walk/trot trainer and a separate 400M-step mixed-gait checkpoint-continuation trainer. The exact continuation checkpoint is `PLACEHOLDER`.
+- **Unresolved multi-gait configuration:** the supplied buffer length `H=1` is below the eight-step gait-reward warmup and the declared per-mode windows. Numerical values are preserved; a setup guard stops execution until the intended final configuration is confirmed. It is not presented as a validated runnable final configuration.
+
 ## Environment setup
 
 Create the pinned environment:
@@ -52,14 +63,14 @@ conda env create -f mjx.yml
 conda activate mjx
 ```
 
-Obtain the Barkour assets from MuJoCo Menagerie, then point both pipelines to the `google_barkour_vb` directory:
+Obtain the Barkour assets from MuJoCo Menagerie, then point the pipelines to the `google_barkour_vb` directory:
 
 ```bash
 git clone https://github.com/google-deepmind/mujoco_menagerie.git third_party/mujoco_menagerie
 export BARKOUR_ROOT_PATH="$PWD/third_party/mujoco_menagerie/google_barkour_vb"
 ```
 
-## Quick checks
+## GPT quick checks
 
 Gait-agnostic:
 

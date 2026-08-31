@@ -1,0 +1,47 @@
+{
+  "excluded_components": [
+    "low_slip"
+  ],
+  "generated_at_utc": "2026-08-15T17:48:46Z",
+  "retained_components": [
+    "vel_track_x",
+    "safe_height",
+    "safe_orientation"
+  ],
+  "rows": [
+    {
+      "component": "vel_track_x",
+      "decision": "retain",
+      "joint_q50": 0.6835824251174927,
+      "rule": "joint_q50 > 0.0",
+      "trot_q50": 0.6246898174285889,
+      "walk_q50": 0.8579686880111694
+    },
+    {
+      "component": "safe_height",
+      "decision": "retain",
+      "joint_q50": 2.551591634750366,
+      "rule": "joint_q50 > 0.0",
+      "trot_q50": 2.4095189571380615,
+      "walk_q50": 2.7303428649902344
+    },
+    {
+      "component": "safe_orientation",
+      "decision": "retain",
+      "joint_q50": 1.546408772468567,
+      "rule": "joint_q50 > 0.0",
+      "trot_q50": 1.438037395477295,
+      "walk_q50": 1.673741340637207
+    },
+    {
+      "component": "low_slip",
+      "decision": "exclude",
+      "joint_q50": -7.579807281494141,
+      "rule": "joint_q50 <= 0.0",
+      "trot_q50": -17.374134063720703,
+      "walk_q50": -2.956416130065918
+    }
+  ],
+  "rule": "retain iff joint_q50 > 0.0; ties at 0.0 excluded",
+  "run_id": "gait_agnostic"
+}

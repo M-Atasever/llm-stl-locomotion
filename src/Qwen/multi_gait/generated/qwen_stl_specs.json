@@ -1,0 +1,280 @@
+{
+  "shared_specifications": {
+    "safety_specification": {
+      "predicates": [
+        {
+          "predicate_name": "roll_bound",
+          "symbolic_form": "Roll <= roll_max",
+          "signal": "Roll",
+          "operator": "<=",
+          "symbolic_parameters": [
+            "roll_max"
+          ],
+          "reason": "Limit base roll to maintain lateral stability."
+        },
+        {
+          "predicate_name": "pitch_bound",
+          "symbolic_form": "Pitch <= pitch_max",
+          "signal": "Pitch",
+          "operator": "<=",
+          "symbolic_parameters": [
+            "pitch_max"
+          ],
+          "reason": "Limit base pitch to avoid tipping forward or backward."
+        },
+        {
+          "predicate_name": "base_height_bound",
+          "symbolic_form": "base_height_min <= Base_height <= base_height_max",
+          "signal": "Base_height",
+          "operator": "between",
+          "symbolic_parameters": [
+            "base_height_min",
+            "base_height_max"
+          ],
+          "reason": "Maintain feasible and stable base height above ground."
+        },
+        {
+          "predicate_name": "slip_bound",
+          "symbolic_form": "Slip <= slip_max",
+          "signal": "Slip",
+          "operator": "<=",
+          "symbolic_parameters": [
+            "slip_max"
+          ],
+          "reason": "Limit foot slippage to ensure reliable contact forces."
+        },
+        {
+          "predicate_name": "swing_clearance_bound",
+          "symbolic_form": "Swing_clearance >= swing_clearance_min",
+          "signal": "Swing_clearance",
+          "operator": ">=",
+          "symbolic_parameters": [
+            "swing_clearance_min"
+          ],
+          "reason": "Ensure sufficient foot clearance during swing to avoid collisions."
+        }
+      ],
+      "formula": "G_[0,H](Roll <= roll_max) \u2227 G_[0,H](Pitch <= pitch_max) \u2227 G_[0,H](base_height_min <= Base_height <= base_height_max) \u2227 G_[0,H](Slip <= slip_max) \u2227 G_[0,H](Swing_clearance >= swing_clearance_min)"
+    },
+    "tracking_specification": {
+      "predicates": [
+        {
+          "predicate_name": "velocity_tracking_error_bound",
+          "symbolic_form": "Velocity_tracking_error <= vel_err_max",
+          "signal": "Velocity_tracking_error",
+          "operator": "<=",
+          "symbolic_parameters": [
+            "vel_err_max"
+          ],
+          "reason": "Track commanded velocity within acceptable error."
+        }
+      ],
+      "formula": "G_[0,H](Velocity_tracking_error <= vel_err_max)"
+    }
+  },
+  "gait_templates": [
+    {
+      "gait_family": "walk-like",
+      "mode_specific_safety": {
+        "predicates": [],
+        "formula": ""
+      },
+      "gait_specification": {
+        "predicates": [
+          {
+            "predicate_name": "three_plus_contact_fraction",
+            "symbolic_form": "P_3plus >= p_3plus_min",
+            "signal": "P_3plus",
+            "operator": ">=",
+            "symbolic_parameters": [
+              "p_3plus_min"
+            ],
+            "reason": "Walking typically maintains at least three feet on the ground for static stability."
+          },
+          {
+            "predicate_name": "no_flight_phase",
+            "symbolic_form": "P_flight <= p_flight_max",
+            "signal": "P_flight",
+            "operator": "<=",
+            "symbolic_parameters": [
+              "p_flight_max"
+            ],
+            "reason": "Walking should not include aerial phases; enforce near-zero flight time."
+          },
+          {
+            "predicate_name": "duty_factor_high",
+            "symbolic_form": "Duty_factor >= duty_factor_min_walk",
+            "signal": "Duty_factor",
+            "operator": ">=",
+            "symbolic_parameters": [
+              "duty_factor_min_walk"
+            ],
+            "reason": "Walking uses high duty factor (>0.5) per leg."
+          }
+        ],
+        "formula": "G_[0,H](P_3plus >= p_3plus_min) \u2227 G_[0,H](P_flight <= p_flight_max) \u2227 G_[0,H](Duty_factor >= duty_factor_min_walk)"
+      },
+      "combined_symbolic_stl": {
+        "formula_name": "walk_stl_spec",
+        "formula": "G_[0,H](Roll <= roll_max) \u2227 G_[0,H](Pitch <= pitch_max) \u2227 G_[0,H](base_height_min <= Base_height <= base_height_max) \u2227 G_[0,H](Slip <= slip_max) \u2227 G_[0,H](Swing_clearance >= swing_clearance_min) \u2227 G_[0,H](Velocity_tracking_error <= vel_err_max) \u2227 G_[0,H](P_3plus >= p_3plus_min) \u2227 G_[0,H](P_flight <= p_flight_max) \u2227 G_[0,H](Duty_factor >= duty_factor_min_walk)",
+        "horizon_recommendation": "H_walk = N_cycle_walk * T_cycle_walk",
+        "parameter_fitting_notes": [
+          "p_3plus_min: fit as average P_3plus over expert walking trajectories.",
+          "p_flight_max: set slightly above observed noise floor in expert data (e.g., 0.01).",
+          "duty_factor_min_walk: estimate from mean duty factor of individual legs in expert walk data.",
+          "All safety and tracking bounds can be fit as max/min observed values plus small margins."
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "gait_family": "trot-like",
+      "mode_specific_safety": {
+        "predicates": [],
+        "formula": ""
+      },
+      "gait_specification": {
+        "predicates": [
+          {
+            "predicate_name": "diagonal_pair_support",
+            "symbolic_form": "P_diag2 >= p_diag2_min",
+            "signal": "P_diag2",
+            "operator": ">=",
+            "symbolic_parameters": [
+              "p_diag2_min"
+            ],
+            "reason": "Trot relies on alternating diagonal two-foot support phases."
+          },
+          {
+            "predicate_name": "two_contact_dominance",
+            "symbolic_form": "P_2contact >= p_2contact_min",
+            "signal": "P_2contact",
+            "operator": ">=",
+            "symbolic_parameters": [
+              "p_2contact_min"
+            ],
+            "reason": "Trot spends most time with exactly two feet in contact."
+          },
+          {
+            "predicate_name": "diagonal_sync_error_low",
+            "symbolic_form": "Diagonal_pair_sync_error <= diag_sync_err_max",
+            "signal": "Diagonal_pair_sync_error",
+            "operator": "<=",
+            "symbolic_parameters": [
+              "diag_sync_err_max"
+            ],
+            "reason": "Diagonal legs should land and lift synchronously in trot."
+          },
+          {
+            "predicate_name": "low_flight_time",
+            "symbolic_form": "P_flight <= p_flight_trot_max",
+            "signal": "P_flight",
+            "operator": "<=",
+            "symbolic_parameters": [
+              "p_flight_trot_max"
+            ],
+            "reason": "Trot may have brief flight phases but should remain mostly grounded."
+          }
+        ],
+        "formula": "G_[0,H](P_diag2 >= p_diag2_min) \u2227 G_[0,H](P_2contact >= p_2contact_min) \u2227 G_[0,H](Diagonal_pair_sync_error <= diag_sync_err_max) \u2227 G_[0,H](P_flight <= p_flight_trot_max)"
+      },
+      "combined_symbolic_stl": {
+        "formula_name": "trot_stl_spec",
+        "formula": "G_[0,H](Roll <= roll_max) \u2227 G_[0,H](Pitch <= pitch_max) \u2227 G_[0,H](base_height_min <= Base_height <= base_height_max) \u2227 G_[0,H](Slip <= slip_max) \u2227 G_[0,H](Swing_clearance >= swing_clearance_min) \u2227 G_[0,H](Velocity_tracking_error <= vel_err_max) \u2227 G_[0,H](P_diag2 >= p_diag2_min) \u2227 G_[0,H](P_2contact >= p_2contact_min) \u2227 G_[0,H](Diagonal_pair_sync_error <= diag_sync_err_max) \u2227 G_[0,H](P_flight <= p_flight_trot_max)",
+        "horizon_recommendation": "H_trot = N_cycle_trot * T_cycle_trot",
+        "parameter_fitting_notes": [
+          "p_diag2_min and p_2contact_min: fit from empirical fractions in expert trot data.",
+          "diag_sync_err_max: compute as max observed diagonal sync error in successful trots.",
+          "p_flight_trot_max: set based on maximum observed flight fraction in expert trot (typically <0.2)."
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "gait_family": "bound-like",
+      "mode_specific_safety": {
+        "predicates": [
+          {
+            "predicate_name": "pitch_stability_during_flight",
+            "symbolic_form": "Pitch <= pitch_max_bound",
+            "signal": "Pitch",
+            "operator": "<=",
+            "symbolic_parameters": [
+              "pitch_max_bound"
+            ],
+            "reason": "Bounding involves aerial phases that can amplify pitch instability; tighter pitch bound may be needed."
+          }
+        ],
+        "formula": "G_[0,H](Pitch <= pitch_max_bound)"
+      },
+      "gait_specification": {
+        "predicates": [
+          {
+            "predicate_name": "front_hind_pair_support",
+            "symbolic_form": "(P_front_pair + P_hind_pair) >= p_pair_support_min",
+            "signal": "P_front_pair, P_hind_pair",
+            "operator": ">=",
+            "symbolic_parameters": [
+              "p_pair_support_min"
+            ],
+            "reason": "Bounding alternates between front-pair and hind-pair stance."
+          },
+          {
+            "predicate_name": "significant_flight_phase",
+            "symbolic_form": "P_flight >= p_flight_min_bound",
+            "signal": "P_flight",
+            "operator": ">=",
+            "symbolic_parameters": [
+              "p_flight_min_bound"
+            ],
+            "reason": "Bounding includes substantial aerial phases; require minimum flight fraction."
+          },
+          {
+            "predicate_name": "front_hind_phase_offset",
+            "symbolic_form": "Front_hind_phase_error \u2248 \u03c0 (mod 2\u03c0), encoded via bounded deviation",
+            "signal": "Front_hind_phase_error",
+            "operator": "between",
+            "symbolic_parameters": [
+              "phase_offset_min",
+              "phase_offset_max"
+            ],
+            "reason": "Bounding requires anti-phase coordination between front and hind pairs."
+          },
+          {
+            "predicate_name": "low_diagonal_support",
+            "symbolic_form": "P_diag2 <= p_diag2_bound_max",
+            "signal": "P_diag2",
+            "operator": "<=",
+            "symbolic_parameters": [
+              "p_diag2_bound_max"
+            ],
+            "reason": "Bounding should avoid diagonal support patterns typical of trot."
+          }
+        ],
+        "formula": "G_[0,H]((P_front_pair + P_hind_pair) >= p_pair_support_min) \u2227 G_[0,H](P_flight >= p_flight_min_bound) \u2227 G_[0,H](phase_offset_min <= Front_hind_phase_error <= phase_offset_max) \u2227 G_[0,H](P_diag2 <= p_diag2_bound_max)"
+      },
+      "combined_symbolic_stl": {
+        "formula_name": "bound_stl_spec",
+        "formula": "G_[0,H](Roll <= roll_max) \u2227 G_[0,H](Pitch <= pitch_max) \u2227 G_[0,H](base_height_min <= Base_height <= base_height_max) \u2227 G_[0,H](Slip <= slip_max) \u2227 G_[0,H](Swing_clearance >= swing_clearance_min) \u2227 G_[0,H](Velocity_tracking_error <= vel_err_max) \u2227 G_[0,H](Pitch <= pitch_max_bound) \u2227 G_[0,H]((P_front_pair + P_hind_pair) >= p_pair_support_min) \u2227 G_[0,H](P_flight >= p_flight_min_bound) \u2227 G_[0,H](phase_offset_min <= Front_hind_phase_error <= phase_offset_max) \u2227 G_[0,H](P_diag2 <= p_diag2_bound_max)",
+        "horizon_recommendation": "H_bound = N_cycle_bound * T_cycle_bound",
+        "parameter_fitting_notes": [
+          "p_pair_support_min: sum of mean P_front_pair and P_hind_pair from expert bounding data.",
+          "p_flight_min_bound: fit as average P_flight in successful bounds (typically >0.2).",
+          "phase_offset_min/max: center around \u03c0 with tolerance fitted from phase error distribution.",
+          "p_diag2_bound_max: set below typical trot values (e.g., <0.1) based on expert data.",
+          "pitch_max_bound: may be stricter than general pitch_max; fit from max pitch during flight in expert bounds."
+        ]
+      },
+      "warnings": [
+        "Phase error predicate assumes a well-defined phase signal; if phase is noisy or undefined during long flight, robustness may degrade.",
+        "The symbolic form 'Front_hind_phase_error \u2248 \u03c0' is approximated by a bounded interval; this assumes phase is normalized to [0, 2\u03c0] or [-\u03c0, \u03c0]."
+      ]
+    }
+  ],
+  "global_warnings": [
+    "All horizons H are symbolic and should be chosen as integer multiples of the dominant gait period to capture full cycles.",
+    "Smooth approximations of STL robustness (e.g., using log-sum-exp) will be needed for differentiable rewards in PPO.",
+    "Some signals like 'Duty_factor' and 'Front_hind_phase_error' require cycle detection or event-based processing; their computation must be compatible with online evaluation over [t-H, t].",
+    "Parameter fitting assumes availability of segmented, labeled expert trajectories for each gait mode."
+  ]
+}

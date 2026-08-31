@@ -1,0 +1,50 @@
+{
+  "generated_at_utc": "2026-08-15T17:48:46Z",
+  "joint": {
+    "q50": {
+      "low_slip": -7.579807281494141,
+      "safe_height": 2.551591634750366,
+      "safe_orientation": 1.546408772468567,
+      "vel_track_x": 0.6835824251174927
+    },
+    "row_count": 50000
+  },
+  "per_gait": {
+    "trot": {
+      "component_order": [
+        "vel_track_x",
+        "safe_height",
+        "safe_orientation",
+        "low_slip"
+      ],
+      "q50": {
+        "low_slip": -17.374134063720703,
+        "safe_height": 2.4095189571380615,
+        "safe_orientation": 1.438037395477295,
+        "vel_track_x": 0.6246898174285889
+      },
+      "row_count": 25000
+    },
+    "walk": {
+      "component_order": [
+        "vel_track_x",
+        "safe_height",
+        "safe_orientation",
+        "low_slip"
+      ],
+      "q50": {
+        "low_slip": -2.956416130065918,
+        "safe_height": 2.7303428649902344,
+        "safe_orientation": 1.673741340637207,
+        "vel_track_x": 0.8579686880111694
+      },
+      "row_count": 25000
+    }
+  },
+  "quantile": {
+    "method": "linear",
+    "numpy_version": "2.5.0",
+    "q": 0.5
+  },
+  "run_id": "gait_agnostic"
+}

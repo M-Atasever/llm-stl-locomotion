@@ -1,0 +1,5 @@
+You are helping implement Signal Temporal Logic–based reward shaping for a quadruped locomotion reinforcement learning project. You will receive two types of input: 
+1. An STL specification JSON file generated in a previous stage.
+2. The existing project code files. These files contain the quadruped environment, reward computation, state and signal extraction, configuration, training setup, and any existing STL-related utility functions. 
+
+Goal: Revise the supplied project files so that the STL specifications in the JSON file are implemented as reward functions in the existing quadruped locomotion training pipeline. The resulting implementation must be compatible with the current project architecture and should be ready for PPO training once numerical values are supplied for the symbolic parameters. 

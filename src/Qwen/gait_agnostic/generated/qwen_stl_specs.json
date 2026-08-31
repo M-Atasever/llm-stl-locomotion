@@ -1,0 +1,140 @@
+{
+  "stl_specifications": {
+    "task_and_safety": {
+      "predicates": [
+        {
+          "predicate_1_name": "vel_track_x",
+          "symbolic_form": "-eps_vx <= vel_err_x <= eps_vx",
+          "signal": "velocity_error_x",
+          "operator": "range",
+          "symbolic_parameters": [
+            "-eps_vx",
+            "eps_vx"
+          ],
+          "reason": "Ensures forward velocity tracks command within tolerance."
+        },
+        {
+          "predicate_2_name": "vel_track_y",
+          "symbolic_form": "-eps_vy <= vel_err_y <= eps_vy",
+          "signal": "velocity_error_y",
+          "operator": "range",
+          "symbolic_parameters": [
+            "-eps_vy",
+            "eps_vy"
+          ],
+          "reason": "Ensures lateral velocity tracks command within tolerance."
+        },
+        {
+          "predicate_3_name": "vel_track_yaw",
+          "symbolic_form": "-eps_vyaw <= vel_err_yaw <= eps_vyaw",
+          "signal": "velocity_error_yaw",
+          "operator": "range",
+          "symbolic_parameters": [
+            "-eps_vyaw",
+            "eps_vyaw"
+          ],
+          "reason": "Ensures angular velocity tracks command within tolerance."
+        },
+        {
+          "predicate_4_name": "safe_height",
+          "symbolic_form": "base_height >= h_min",
+          "signal": "base_height",
+          "operator": "geq",
+          "symbolic_parameters": [
+            "h_min"
+          ],
+          "reason": "Prevents robot body from collapsing or touching ground."
+        },
+        {
+          "predicate_5_name": "safe_orientation",
+          "symbolic_form": "-ori_max <= orientation_err <= ori_max",
+          "signal": "orientation_error",
+          "operator": "range",
+          "symbolic_parameters": [
+            "-ori_max",
+            "ori_max"
+          ],
+          "reason": "Keeps roll and pitch within safe limits to avoid falls."
+        }
+      ],
+      "formula": "G_[0,H](vel_track_x ∧ vel_track_y ∧ vel_track_yaw ∧ safe_height ∧ safe_orientation)"
+    },
+    "gait_quality_and_efficiency": {
+      "predicates": [
+        {
+          "predicate_1_name": "low_slip",
+          "symbolic_form": "slip_velocity <= slip_max",
+          "signal": "slip_velocity",
+          "operator": "leq",
+          "symbolic_parameters": [
+            "slip_max"
+          ],
+          "reason": "Minimizes foot slip during contact for stability and efficiency."
+        },
+        {
+          "predicate_2_name": "smooth_action",
+          "symbolic_form": "action_rate <= rate_max",
+          "signal": "action_rate",
+          "operator": "leq",
+          "symbolic_parameters": [
+            "rate_max"
+          ],
+          "reason": "Encourages smooth control outputs to reduce wear and improve sim-to-real transfer."
+        },
+        {
+          "predicate_3_name": "contact_FL",
+          "symbolic_form": "force_FL >= f_th",
+          "signal": "foot_force_FL",
+          "operator": "geq",
+          "symbolic_parameters": [
+            "f_th"
+          ],
+          "reason": "Atomic predicate detecting front-left foot contact event."
+        },
+        {
+          "predicate_4_name": "contact_FR",
+          "symbolic_form": "force_FR >= f_th",
+          "signal": "foot_force_FR",
+          "operator": "geq",
+          "symbolic_parameters": [
+            "f_th"
+          ],
+          "reason": "Atomic predicate detecting front-right foot contact event."
+        },
+        {
+          "predicate_5_name": "contact_RL",
+          "symbolic_form": "force_RL >= f_th",
+          "signal": "foot_force_RL",
+          "operator": "geq",
+          "symbolic_parameters": [
+            "f_th"
+          ],
+          "reason": "Atomic predicate detecting rear-left foot contact event."
+        },
+        {
+          "predicate_6_name": "contact_RR",
+          "symbolic_form": "force_RR >= f_th",
+          "signal": "foot_force_RR",
+          "operator": "geq",
+          "symbolic_parameters": [
+            "f_th"
+          ],
+          "reason": "Atomic predicate detecting rear-right foot contact event."
+        }
+      ],
+      "formula": "G_[0,H](low_slip ∧ smooth_action ∧ F_[0,h](contact_FL) ∧ F_[0,h](contact_FR) ∧ F_[0,h](contact_RL) ∧ F_[0,h](contact_RR))"
+    }
+  },
+  "combined_symbolic_stl": {
+    "formula": "G_[0,H](vel_track_x ∧ vel_track_y ∧ vel_track_yaw ∧ safe_height ∧ safe_orientation ∧ low_slip ∧ smooth_action ∧ F_[0,h](contact_FL) ∧ F_[0,h](contact_FR) ∧ F_[0,h](contact_RL) ∧ F_[0,h](contact_RR))",
+    "horizon_recommendation": "H=1.0s, h=0.5s"
+  },
+  "warnings": [
+    "Parameter Sensitivity: Thresholds (eps_vx, h_min, slip_max, rate_max) must be carefully tuned. Overly tight bounds may make the specification unsatisfiable, causing reward vanishing; loose bounds may yield poor behavior.",
+    "Conflict Potential: Velocity tracking may conflict with low_slip and smooth_action at high speeds or during rapid accelerations. The robustness aggregation (e.g., min vs. weighted sum) will determine trade-offs.",
+    "Contact Ambiguity: F_[0,h](force >= f_th) ensures the foot contacts the ground at least once every h seconds, but does not enforce a swing phase. The robot could satisfy this by dragging feet. If swing is required, additional constraints on swing_clearance or pair_alternation are recommended.",
+    "Horizon Adaptation: The periodicity horizon h is fixed in the template. For variable velocity commands, the optimal step frequency changes. A fixed h may penalize valid gaits at extreme speeds. Consider scheduling h based on commanded velocity.",
+    "Robustness Scaling: For PPO, robustness scores from different predicates (e.g., velocity error vs. binary contact events) must be normalized or scaled to comparable ranges to prevent gradient domination by specific terms.",
+    "Grammar Simplification: The template uses G(F(event)) for periodicity. This is valid under the allowed grammar but assumes the evaluation window H is sufficiently larger than h to capture the recurrence reliably."
+  ]
+}
